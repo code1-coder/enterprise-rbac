@@ -1,0 +1,31 @@
+# OS
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# IDE
+.idea/
+.vscode/
+*.iml
+*.ipr
+*.iws
+
+# Java / Maven
+target/
+*.class
+*.log
+logs/
+
+# Frontend
+node_modules/
+dist/
+.cache/
+.vite/
+coverage/
+
+# Local secrets
+.env
+.env.*
+!.env.example
+application-local.yml
+*.local.yml
