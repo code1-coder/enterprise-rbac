@@ -71,6 +71,14 @@ public class RedisAuthStore {
         }
     }
 
+    public void evictPermissions(Long userId) {
+        try {
+            redis.delete(PERMISSION_PREFIX + userId);
+        } catch (RuntimeException ex) {
+            log.warn("permission_cache_evict_failed userId={}", userId, ex);
+        }
+    }
+
     public boolean isBlacklisted(String tokenId) {
         if (tokenId == null || tokenId.isBlank()) {
             return false;
