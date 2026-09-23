@@ -1,4 +1,4 @@
-> 项目：[企业权限角色分配系统](../README.md)（`enterprise-rbac`）。与 [api-design.md](api-design.md) 和 [schema.sql](../src/main/resources/db/schema.sql) 对齐。接口尚未实现。登录和注册目前是 404，其他 `/api/**` 未认证是 401。示例里的 `User@123456` 不是管理员密码，也不是数据库密码。除 `admin` 以外的用户 id 都是样例。
+> 项目：[企业权限角色分配系统](../README.md)（`enterprise-rbac`）。认证与用户管理接口已实现，角色维护和菜单维护接口仍在开发中（当前用户菜单/按钮权限查询已实现）。其他 `/api/**` 未认证返回 401。示例里的 `User@123456` 不是管理员密码，也不是数据库密码。除 `admin` 以外的用户 id 都是样例。
 
 # API接口快速参考表
 
@@ -27,6 +27,8 @@
 | 修改自己密码 | PUT | /api/users/{id}/password | 已登录 |
 | 重置用户密码（管理员） | PUT | /api/users/{id}/reset-password | system:user:resetPwd |
 | 给用户分配角色 | PUT | /api/users/{id}/roles | system:user:role |
+
+修改本人密码只允许已登录用户操作，Service 会校验路径中的用户 ID 与当前 JWT 身份一致。更新用户是完整更新：`status` 必填，`nickname`、`email`、`phone` 未传、传 `null` 或空白字符串都会清空对应字段。
 
 ---
 

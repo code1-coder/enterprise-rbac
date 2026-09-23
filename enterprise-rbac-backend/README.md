@@ -2,7 +2,7 @@
 
 Enterprise RBAC。Maven 工程名是 `enterprise-rbac`。
 
-这是一个 Spring Boot 3.2.5 的权限管理脚手架：工程配置、数据库脚本和接口设计已经对齐，用户、角色、菜单的实体、Mapper、JWT 和 Controller 还没写。不要把 `docs/api-design.md` 里的路径当成已经上线的接口。
+这是一个 Spring Boot 3.2.5 的权限管理服务。JWT 认证和用户管理的九项接口已实现；角色维护和菜单维护接口仍在开发中。`docs/api-design.md` 中的角色、菜单管理路径是设计内容，不代表这些用例已可用。
 
 ## 技术栈
 
@@ -19,7 +19,7 @@ Enterprise RBAC。Maven 工程名是 `enterprise-rbac`。
 | Knife4j | 4.5.0 | Jakarta / OpenAPI 3 |
 | Hutool | 5.8.29 | 工具库 |
 | Fastjson2 | 2.0.52 | JSON |
-| Lombok | 由 Spring Boot 管理 | 目前还没有实体类 |
+| Lombok | 由 Spring Boot 管理 | 用于实体、DTO 等模型 |
 
 Redis 用本机实例即可，不锁定小版本。Spring Security、MySQL 驱动、Lombok 不要在 `pom.xml` 里另写版本。
 
@@ -29,7 +29,7 @@ Redis 用本机实例即可，不锁定小版本。Spring Security、MySQL 驱�
 ├── pom.xml
 ├── README.md
 ├── docs
-│   ├── api-design.md       接口设计，尚未实现
+│   ├── api-design.md       接口设计；用户与认证已实现，角色/菜单维护待实现
 │   ├── api-reference.md    接口速查
 │   ├── database-er.md      表字段和关系
 │   ├── database-init.md    初始化步骤
@@ -37,13 +37,18 @@ Redis 用本机实例即可，不锁定小版本。Spring Security、MySQL 驱�
 └── src
     ├── main
     │   ├── java/org/example/rbac
-    │   │   ├── RbacApplication.java
-    │   │   └── config/SecurityConfig.java
+    │   │   ├── common, config
+    │   │   ├── controller, dto, vo
+    │   │   ├── entity, mapper
+    │   │   ├── security
+    │   │   └── service/impl
     │   └── resources
     │       ├── application.yml
     │       ├── static/index.html
     │       └── db/schema.sql
-    └── test/java/org/example/rbac/RbacApplicationTests.java
+    └── test/java/org/example/rbac
+        ├── security
+        └── service/impl
 ```
 
 上传前不要包含 `target/`、`.idea/`。这两个目录已在 `.gitignore` 中。
@@ -132,6 +137,6 @@ mvn spring-boot:run
 
 ## 当前代码边界
 
-已有：`RbacApplication`、`SecurityConfig`、`application.yml`、`schema.sql`。
+已实现：认证与 JWT 安全链路、用户管理九项接口（含用户角色分配）、当前用户菜单和按钮权限查询。
 
-还没有：`entity`、`mapper`、`service`、`controller`、JWT 过滤器和 Redis 权限缓存。文档里的 `@PreAuthorize`、Redis key `user:permissions:{userId}` 是设计，不是现成实现。
+待实现：角色 CRUD 与角色菜单分配、菜单树和菜单维护 CRUD。对应 Service 当前通过骨架占位异常明确标记未完成。

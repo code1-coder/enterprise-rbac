@@ -1,4 +1,4 @@
-> 项目：[企业权限角色分配系统](../README.md)（`enterprise-rbac`）。本文是接口设计，Controller 还没写。权限标识以 [schema.sql](../src/main/resources/db/schema.sql) 为准，删除用 `delete`，不用 `remove`。运行时 `SecurityConfig` 放行登录、注册、首页、Knife4j 和 Druid；其他 `/api/**` 未认证返回 401。示例用户密码写 `User@123456`，不要和数据库密码 `123456`、管理员密码 `admin123` 搞混。
+> 项目：[企业权限角色分配系统](../README.md)（`enterprise-rbac`）。认证与用户管理接口已实现；角色维护和菜单维护接口仍是设计内容（当前用户菜单/按钮权限查询除外）。权限标识以 [schema.sql](../src/main/resources/db/schema.sql) 为准，删除用 `delete`，不用 `remove`。运行时 `SecurityConfig` 放行登录、注册、首页、Knife4j 和 Druid；其他 `/api/**` 未认证返回 401。示例用户密码写 `User@123456`，不要和数据库密码 `123456`、管理员密码 `admin123` 搞混。
 
 # 企业权限角色分配系统 - API接口设计文档
 
@@ -228,6 +228,8 @@ PUT /api/users/{id}
 ```
 
 **权限要求**: `system:user:edit`
+
+这是完整更新：`status` 必填；`nickname`、`email`、`phone` 未传、传 `null` 或空白字符串都会清空对应字段。
 
 ### 2.5 删除用户（逻辑删除）
 ```
