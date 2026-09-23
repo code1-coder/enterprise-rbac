@@ -37,7 +37,7 @@ import java.util.Set;
  * AuthServiceImpl 的当前用户、刷新和退出都从 SecuritySupport 拿 AuthUser，不再自己解析 JWT。
  * 令牌无效、在黑名单，或 sys_user 已删除、已停用时不写入登录态，受保护接口会落到 SecurityConfig 的 401。
  * 权限来自 Redis 的 user:permissions:{userId}，没有缓存时经 AuthLookupService 回源并回填。
- * 角色编码来自令牌签发时的 role_code，和 permission 一起成为 GrantedAuthority，供 hasAuthority 比对。
+ * 角色编码保留在令牌声明中，但不作为权限；接口授权只使用 sys_menu.permission。
  */
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
@@ -108,9 +108,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 redisAuthStore.cachePermissions(user.getId(), loaded);
                 return loaded;
             });
-            Set<String> granted = new LinkedHashSet<>();
-            granted.addAll(parsed.roles());
-            granted.addAll(permissions);
+            Set<String> granted = new LinkedHashSet<>(permissions);
             List<SimpleGrantedAuthority> authorities = new ArrayList<>();
             for (String code : granted) {
                 if (code != null && !code.isBlank()) {

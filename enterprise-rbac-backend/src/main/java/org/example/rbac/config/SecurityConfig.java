@@ -24,8 +24,8 @@ import java.nio.charset.StandardCharsets;
 
 /**
  * 认证和鉴权放在 Controller 之外。过滤链无 Session：登录、注册和文档放行，其余请求必须已认证。
- * JwtAuthenticationFilter 解析 Bearer 令牌，并把角色编码和 sys_menu.permission 放进 GrantedAuthority。
- * EnableMethodSecurity 让 PreAuthorize 生效，hasAuthority 比对的是 permission，不是中文角色名。
+ * JwtAuthenticationFilter 解析 Bearer 令牌，只把 sys_menu.permission 放进 GrantedAuthority。
+ * EnableMethodSecurity 让 PreAuthorize 生效，角色编码只作为用户角色信息，不参与 hasAuthority。
  * 修改密码、我的菜单、我的权限、角色下拉没有单独的权限串，只要已登录即可。
  * 只能改自己的密码不在这里判断，留给 UserService 核对路径上的用户 id。
  * 不再注册内存用户，避免启动时生成随机密码；密码比对使用这里的 BCryptPasswordEncoder。
