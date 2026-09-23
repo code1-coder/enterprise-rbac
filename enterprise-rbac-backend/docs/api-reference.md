@@ -1,4 +1,4 @@
-> 项目：[企业权限角色分配系统](../README.md)（`enterprise-rbac`）。认证与用户管理接口已实现，角色维护和菜单维护接口仍在开发中（当前用户菜单/按钮权限查询已实现）。其他 `/api/**` 未认证返回 401。示例里的 `User@123456` 不是管理员密码，也不是数据库密码。除 `admin` 以外的用户 id 都是样例。
+> 项目：[企业权限角色分配系统](../README.md)（`enterprise-rbac`）。认证、用户管理和角色管理接口已实现；菜单树与菜单维护接口仍在开发中（当前用户菜单/按钮权限查询已实现）。其他 `/api/**` 未认证返回 401。示例里的 `User@123456` 不是管理员密码，也不是数据库密码。除 `admin` 以外的用户 id 都是样例。
 
 # API接口快速参考表
 
@@ -44,6 +44,10 @@
 | 删除角色 | DELETE | /api/roles/{id} | system:role:delete |
 | 给角色分配权限 | PUT | /api/roles/{id}/permissions | system:role:assign |
 | 获取角色的权限ID列表 | GET | /api/roles/{id}/permissions | system:role:query |
+
+角色分页支持 `page`（默认 1）、`size`（默认 10，最大 100）和 `roleName` 模糊查询，结果按 `sort`、`id` 升序；`/api/roles/list` 返回同序的全部角色，仅要求已登录。创建时 `roleName`、`roleCode`、`status` 必填，`sort` 缺省为 0；角色名称和编码会去除首尾空白且必须唯一，逻辑删除角色占用过的名称或编码不能复用。更新时上述三个字段仍必填，未传 `sort` 或 `remark` 保留原值，`remark` 传空白字符串会清空。
+
+权限分配请求体使用 `menuIds`（菜单 ID 列表），空数组表示清除已有分配；菜单 ID 必须存在且未逻辑删除。删除角色会逻辑删除角色并在同一事务清理用户角色、角色菜单关联；角色停用、删除或菜单分配变更后，受影响用户的 Redis 权限缓存会在事务提交后失效。
 
 ---
 
@@ -232,5 +236,6 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIs...
 ---
 
 **文档版本**: v1.0  
-**更新时间**: 2026-09-22  
+**更新时间**: 2026-09-23
+
 **在线文档**: http://localhost:8080/doc.html (项目启动后访问)
