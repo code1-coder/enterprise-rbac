@@ -46,6 +46,7 @@ public class RoleController {
         return Result.query(roleService.pageList(query));
     }
 
+    /** 已登录管理端表单需要加载角色选项；实际角色变更仍由带权限校验的分配接口执行。 */
     @Operation(summary = "获取所有角色")
     @GetMapping("/list")
     public Result<List<RoleVO>> listAll() {

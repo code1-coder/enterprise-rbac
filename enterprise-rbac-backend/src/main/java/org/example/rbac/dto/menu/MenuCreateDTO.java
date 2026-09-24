@@ -37,6 +37,9 @@ public class MenuCreateDTO {
     @Size(max = 100, message = "图标最长 100 位")
     private String icon;
 
+    @Size(max = 500, message = "备注最长 500 位")
+    private String remark;
+
     @Min(value = 0, message = "排序号不能小于 0")
     private Integer sort;
 
