@@ -57,7 +57,7 @@ public class UserController {
     @Operation(summary = "获取用户详情")
     @GetMapping("/{id}")
     @PreAuthorize("hasAuthority('system:user:query')")
-    public Result<UserVO> getById(@PathVariable Long id) {
+    public Result<UserVO> getById(@PathVariable("id") Long id) {
         return Result.query(userService.getUserById(id));
     }
 
@@ -72,7 +72,7 @@ public class UserController {
     @Operation(summary = "更新用户")
     @PutMapping("/{id}")
     @PreAuthorize("hasAuthority('system:user:edit')")
-    public Result<Void> update(@PathVariable Long id, @Valid @RequestBody UserUpdateDTO dto) {
+    public Result<Void> update(@PathVariable("id") Long id, @Valid @RequestBody UserUpdateDTO dto) {
         userService.updateUser(id, dto);
         return Result.success();
     }
@@ -80,7 +80,7 @@ public class UserController {
     @Operation(summary = "删除用户")
     @DeleteMapping("/{id}")
     @PreAuthorize("hasAuthority('system:user:delete')")
-    public Result<Void> delete(@PathVariable Long id) {
+    public Result<Void> delete(@PathVariable("id") Long id) {
         userService.deleteUser(id);
         return Result.success();
     }
@@ -88,7 +88,7 @@ public class UserController {
     @Operation(summary = "修改自己的密码")
     @PutMapping("/{id}/password")
     // 任一已认证用户可修改本人密码；Service 会校验路径 ID 与 JWT 用户 ID 一致。
-    public Result<Void> changePassword(@PathVariable Long id, @Valid @RequestBody PasswordUpdateDTO dto) {
+    public Result<Void> changePassword(@PathVariable("id") Long id, @Valid @RequestBody PasswordUpdateDTO dto) {
         userService.changePassword(id, dto);
         return Result.success();
     }
@@ -96,7 +96,7 @@ public class UserController {
     @Operation(summary = "重置用户密码")
     @PutMapping("/{id}/reset-password")
     @PreAuthorize("hasAuthority('system:user:resetPwd')")
-    public Result<Void> resetPassword(@PathVariable Long id, @Valid @RequestBody ResetPasswordDTO dto) {
+    public Result<Void> resetPassword(@PathVariable("id") Long id, @Valid @RequestBody ResetPasswordDTO dto) {
         userService.resetPassword(id, dto);
         return Result.success();
     }
@@ -104,7 +104,7 @@ public class UserController {
     @Operation(summary = "给用户分配角色")
     @PutMapping("/{id}/roles")
     @PreAuthorize("hasAuthority('system:user:role')")
-    public Result<Void> assignRoles(@PathVariable Long id, @Valid @RequestBody AssignRolesDTO dto) {
+    public Result<Void> assignRoles(@PathVariable("id") Long id, @Valid @RequestBody AssignRolesDTO dto) {
         userService.assignRoles(id, dto.getRoleIds());
         return Result.success();
     }

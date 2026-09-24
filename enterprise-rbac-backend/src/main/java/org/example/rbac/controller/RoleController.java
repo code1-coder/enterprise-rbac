@@ -56,7 +56,7 @@ public class RoleController {
     @Operation(summary = "获取角色已分配的权限")
     @GetMapping("/{id}/permissions")
     @PreAuthorize("hasAuthority('system:role:query')")
-    public Result<RolePermissionVO> listPermissions(@PathVariable Long id) {
+    public Result<RolePermissionVO> listPermissions(@PathVariable("id") Long id) {
         RolePermissionVO vo = new RolePermissionVO();
         vo.setMenuIds(roleService.listMenuIds(id));
         return Result.query(vo);
@@ -65,7 +65,7 @@ public class RoleController {
     @Operation(summary = "给角色分配权限")
     @PutMapping("/{id}/permissions")
     @PreAuthorize("hasAuthority('system:role:assign')")
-    public Result<Void> assignPermissions(@PathVariable Long id, @Valid @RequestBody AssignMenusDTO dto) {
+    public Result<Void> assignPermissions(@PathVariable("id") Long id, @Valid @RequestBody AssignMenusDTO dto) {
         roleService.assignMenus(id, dto.getMenuIds());
         return Result.success();
     }
@@ -73,7 +73,7 @@ public class RoleController {
     @Operation(summary = "获取角色详情")
     @GetMapping("/{id}")
     @PreAuthorize("hasAuthority('system:role:query')")
-    public Result<RoleVO> getById(@PathVariable Long id) {
+    public Result<RoleVO> getById(@PathVariable("id") Long id) {
         return Result.query(roleService.getRoleById(id));
     }
 
@@ -88,7 +88,7 @@ public class RoleController {
     @Operation(summary = "更新角色")
     @PutMapping("/{id}")
     @PreAuthorize("hasAuthority('system:role:edit')")
-    public Result<Void> update(@PathVariable Long id, @Valid @RequestBody RoleUpdateDTO dto) {
+    public Result<Void> update(@PathVariable("id") Long id, @Valid @RequestBody RoleUpdateDTO dto) {
         roleService.updateRole(id, dto);
         return Result.success();
     }
@@ -96,7 +96,7 @@ public class RoleController {
     @Operation(summary = "删除角色")
     @DeleteMapping("/{id}")
     @PreAuthorize("hasAuthority('system:role:delete')")
-    public Result<Void> delete(@PathVariable Long id) {
+    public Result<Void> delete(@PathVariable("id") Long id) {
         roleService.deleteRole(id);
         return Result.success();
     }

@@ -58,7 +58,7 @@ public class MenuController {
     @Operation(summary = "获取菜单详情")
     @GetMapping("/{id}")
     @PreAuthorize("hasAuthority('system:menu:query')")
-    public Result<MenuVO> getById(@PathVariable Long id) {
+    public Result<MenuVO> getById(@PathVariable("id") Long id) {
         return Result.query(menuService.getMenuById(id));
     }
 
@@ -73,7 +73,7 @@ public class MenuController {
     @Operation(summary = "更新菜单")
     @PutMapping("/{id}")
     @PreAuthorize("hasAuthority('system:menu:edit')")
-    public Result<Void> update(@PathVariable Long id, @Valid @RequestBody MenuUpdateDTO dto) {
+    public Result<Void> update(@PathVariable("id") Long id, @Valid @RequestBody MenuUpdateDTO dto) {
         menuService.updateMenu(id, dto);
         return Result.success();
     }
@@ -81,7 +81,7 @@ public class MenuController {
     @Operation(summary = "删除菜单")
     @DeleteMapping("/{id}")
     @PreAuthorize("hasAuthority('system:menu:delete')")
-    public Result<Void> delete(@PathVariable Long id) {
+    public Result<Void> delete(@PathVariable("id") Long id) {
         menuService.deleteMenu(id);
         return Result.success();
     }
