@@ -8,8 +8,10 @@ import org.example.rbac.common.exception.BusinessException;
 import org.example.rbac.dto.user.PasswordUpdateDTO;
 import org.example.rbac.entity.SysUser;
 import org.example.rbac.mapper.SysUserMapper;
+import org.example.rbac.mapper.SysRoleMapper;
 import org.example.rbac.mapper.SysUserRoleMapper;
 import org.example.rbac.security.AuthUser;
+import org.example.rbac.security.RedisAuthStore;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -39,6 +41,10 @@ class UserPasswordServiceTest {
     private SysUserMapper userMapper;
     @Mock
     private SysUserRoleMapper userRoleMapper;
+    @Mock
+    private SysRoleMapper roleMapper;
+    @Mock
+    private RedisAuthStore redisAuthStore;
 
     private final PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 
@@ -106,7 +112,7 @@ class UserPasswordServiceTest {
     }
 
     private UserServiceImpl service() {
-        return new UserServiceImpl(userMapper, userRoleMapper, passwordEncoder);
+        return new UserServiceImpl(userMapper, userRoleMapper, passwordEncoder, roleMapper, redisAuthStore);
     }
 
     private static void loginAs(Long userId) {

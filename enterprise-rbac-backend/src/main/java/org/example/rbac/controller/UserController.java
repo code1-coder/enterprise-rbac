@@ -87,6 +87,7 @@ public class UserController {
 
     @Operation(summary = "修改自己的密码")
     @PutMapping("/{id}/password")
+    // 任一已认证用户可修改本人密码；Service 会校验路径 ID 与 JWT 用户 ID 一致。
     public Result<Void> changePassword(@PathVariable Long id, @Valid @RequestBody PasswordUpdateDTO dto) {
         userService.changePassword(id, dto);
         return Result.success();

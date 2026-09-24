@@ -1,4 +1,4 @@
-> 项目：[企业权限角色分配系统](../README.md)（`enterprise-rbac`）。与 [api-design.md](api-design.md) 和 [schema.sql](../src/main/resources/db/schema.sql) 对齐。接口尚未实现。登录和注册目前是 404，其他 `/api/**` 未认证是 401。示例里的 `User@123456` 不是管理员密码，也不是数据库密码。除 `admin` 以外的用户 id 都是样例。
+> 项目：[企业权限角色分配系统](../README.md)（`enterprise-rbac`）。认证、用户、角色和菜单权限接口已实现。其他 `/api/**` 未认证返回 401。示例里的 `User@123456` 不是管理员密码，也不是数据库密码。除 `admin` 以外的用户 id 都是样例。
 
 # API接口快速参考表
 
@@ -28,6 +28,8 @@
 | 重置用户密码（管理员） | PUT | /api/users/{id}/reset-password | system:user:resetPwd |
 | 给用户分配角色 | PUT | /api/users/{id}/roles | system:user:role |
 
+修改本人密码只允许已登录用户操作，Service 会校验路径中的用户 ID 与当前 JWT 身份一致。更新用户是完整更新：`status` 必填，`nickname`、`email`、`phone` 未传、传 `null` 或空白字符串都会清空对应字段。
+
 ---
 
 ## 🎭 角色管理模块
@@ -43,6 +45,10 @@
 | 给角色分配权限 | PUT | /api/roles/{id}/permissions | system:role:assign |
 | 获取角色的权限ID列表 | GET | /api/roles/{id}/permissions | system:role:query |
 
+角色分页支持 `page`（默认 1）、`size`（默认 10，最大 100）和 `roleName` 模糊查询，结果按 `sort`、`id` 升序；`/api/roles/list` 返回同序的全部角色，仅要求已登录。创建时 `roleName`、`roleCode`、`status` 必填，`sort` 缺省为 0；角色名称和编码会去除首尾空白且必须唯一，逻辑删除角色占用过的名称或编码不能复用。更新时上述三个字段仍必填，未传 `sort` 或 `remark` 保留原值，`remark` 传空白字符串会清空。
+
+权限分配请求体使用 `menuIds`（菜单 ID 列表），空数组表示清除已有分配；菜单 ID 必须存在且未逻辑删除。删除角色会逻辑删除角色并在同一事务清理用户角色、角色菜单关联；角色停用、删除或菜单分配变更后，受影响用户的 Redis 权限缓存会在事务提交后失效。
+
 ---
 
 ## 📋 菜单权限管理模块
@@ -57,6 +63,8 @@
 | 更新菜单 | PUT | /api/menus/{id} | system:menu:edit |
 | 删除菜单 | DELETE | /api/menus/{id} | system:menu:delete |
 
+菜单管理树包含 M（目录）、C（菜单）、F（按钮）和 A（接口）全部类型；当前用户导航树仅包含已分配且启用的 M、C。创建默认 `sort=0`、`visible=1`、`status=1`；更新未传 `sort`、`visible`、`status`、`remark` 时保留原值。删除有子菜单的节点会失败；成功删除会逻辑删除菜单、清理角色菜单关联，并在事务提交后清除相关用户的权限缓存。
+
 ---
 
 ## 🎯 HTTP方法使用规则
@@ -64,7 +72,7 @@
 ```
 GET     → 查询数据（不改变服务器状态）
 POST    → 创建新资源
-PUT     → 更新资源（完整替换）
+PUT     → 更新资源；未传字段的处理规则以对应接口 DTO 说明为准
 DELETE  → 删除资源
 ```
 
@@ -213,22 +221,18 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIs...
    - `page`: 页码（从1开始）
    - `size`: 每页数量（默认10）
 
-3. **批量操作** 统一格式：
-   ```json
-   {
-     "ids": [1, 2, 3]
-   }
-   ```
+3. **批量/关联操作**：字段按接口区分，用户批量删除使用 `ids`，用户角色分配使用 `roleIds`，角色菜单分配使用 `menuIds`；空数组语义以对应接口说明为准。
 
 4. **时间格式** 统一使用：
    ```
    yyyy-MM-dd HH:mm:ss
    ```
 
-5. **逻辑删除**：所有删除操作都是逻辑删除（设置 deleted=1），不会真正删除数据。
+5. **删除方式**：用户、角色和菜单主记录使用逻辑删除；用户角色、角色菜单等关联表没有 `deleted` 字段，删除或调整分配时会清理关联记录。
 
 ---
 
 **文档版本**: v1.0  
-**更新时间**: 2026-09-22  
+**更新时间**: 2026-09-23
+
 **在线文档**: http://localhost:8080/doc.html (项目启动后访问)

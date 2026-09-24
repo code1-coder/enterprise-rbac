@@ -3,6 +3,7 @@ package org.example.rbac.dto.user;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
 
@@ -24,5 +25,6 @@ public class UserUpdateDTO {
 
     @Min(value = 0, message = "状态只能是 0 或 1")
     @Max(value = 1, message = "状态只能是 0 或 1")
+    @NotNull(message = "状态不能为空")
     private Integer status;
 }

@@ -1,4 +1,4 @@
-> 项目：[企业权限角色分配系统](../README.md)（`enterprise-rbac`）。本文是接口设计，Controller 还没写。权限标识以 [schema.sql](../src/main/resources/db/schema.sql) 为准，删除用 `delete`，不用 `remove`。运行时 `SecurityConfig` 放行登录、注册、首页、Knife4j 和 Druid；其他 `/api/**` 未认证返回 401。示例用户密码写 `User@123456`，不要和数据库密码 `123456`、管理员密码 `admin123` 搞混。
+> 项目：[企业权限角色分配系统](../README.md)（`enterprise-rbac`）。认证、用户、角色和菜单权限接口已实现。权限标识以 [schema.sql](../src/main/resources/db/schema.sql) 为准，删除用 `delete`，不用 `remove`。运行时 `SecurityConfig` 放行登录、注册、首页、Knife4j 和 Druid；其他 `/api/**` 未认证返回 401。示例用户密码写 `User@123456`，不要和数据库密码 `123456`、管理员密码 `admin123` 搞混。
 
 # 企业权限角色分配系统 - API接口设计文档
 
@@ -10,7 +10,7 @@
 |------|------|--------|------|
 | **GET** | 查询数据（单个/列表） | 是 | GET /api/users |
 | **POST** | 创建新资源 | 否 | POST /api/users |
-| **PUT** | 完整更新资源 | 是 | PUT /api/users/1 |
+| **PUT** | 更新已有资源，字段缺省语义以具体接口说明为准 | 是 | PUT /api/users/1 |
 | **DELETE** | 删除资源 | 是 | DELETE /api/users/1 |
 
 ### URL 命名规范
@@ -229,6 +229,8 @@ PUT /api/users/{id}
 
 **权限要求**: `system:user:edit`
 
+这是完整更新：`status` 必填；`nickname`、`email`、`phone` 未传、传 `null` 或空白字符串都会清空对应字段。
+
 ### 2.5 删除用户（逻辑删除）
 ```
 DELETE /api/users/{id}
@@ -295,6 +297,8 @@ PUT /api/users/{id}/roles
 GET /api/roles?page=1&size=10&roleName=管理员
 ```
 
+查询参数：`page` 页码（默认 1）、`size` 每页数量（默认 10，最大 100）、`roleName` 角色名称模糊查询。结果按 `sort`、`id` 升序排列。
+
 **权限要求**: `system:role:list`
 
 ### 3.2 获取所有角色（不分页，用于下拉框）
@@ -329,10 +333,14 @@ POST /api/roles
 
 **权限要求**: `system:role:add`
 
+`roleName` 与 `roleCode` 必须唯一；`sort` 未传时默认为 0，空白备注保存为 `null`。数据库对逻辑删除记录仍保留唯一约束，已删除角色使用过的名称和编码不能复用。
+
 ### 3.5 更新角色
 ```
 PUT /api/roles/{id}
 ```
+
+请求体包含必填的 `roleName`、`roleCode`、`status`，以及可选的 `sort`、`remark`。未传 `sort` 或 `remark` 时保留现值；`remark` 传空白字符串时清空。名称或编码与其他角色冲突时返回 400。
 
 **权限要求**: `system:role:edit`
 
@@ -342,6 +350,8 @@ DELETE /api/roles/{id}
 ```
 
 **权限要求**: `system:role:delete`
+
+角色按逻辑删除，并在同一事务中清理 `sys_role_menu`、`sys_user_role` 关联；被删除角色的用户会失去该角色权限。
 
 ### 3.7 给角色分配权限（菜单）
 ```
@@ -358,6 +368,7 @@ PUT /api/roles/{id}/permissions
 **权限要求**: `system:role:assign`
 
 这里的权限就是菜单 id，写入 `sys_role_menu`。库里没有 `sys_permission` 或 `sys_role_permission`。
+提交的菜单 ID 必须存在且未逻辑删除；`menuIds` 为空数组表示清空角色已有菜单。受影响用户的 Redis 权限缓存会在事务提交后失效。
 
 ### 3.8 获取角色已分配的权限ID列表
 ```
@@ -475,7 +486,7 @@ PUT /api/menus/{id}
 DELETE /api/menus/{id}
 ```
 
-删除前需校验：若存在子菜单则拒绝删除。
+请求使用 `parentId`、`menuName`、`menuType` 等菜单字段；类型为 M 目录、C 菜单、F 按钮、A 接口。创建时 `sort` 缺省为 0，`visible`、`status` 缺省为 1；更新是完整更新核心字段，`sort`、`visible`、`status`、`remark` 未传时保留原值，备注传空白会清空。父级必须为 0 或已存在且未逻辑删除的菜单，禁止把自身或后代设为父级。删除前若存在子菜单则拒绝；删除会逻辑删除菜单并清理角色菜单关联。菜单更新或删除后，关联角色用户的 Redis 权限缓存会在事务提交后失效。
 
 **权限要求**: `system:menu:delete`
 

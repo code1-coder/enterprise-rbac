@@ -18,6 +18,7 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -41,7 +42,7 @@ class JwtAuthenticationFilterTest {
         JwtProperties properties = properties();
         provider = new JwtTokenProvider(properties);
         provider.init();
-        token = provider.issue(1L, "tester", List.of("ROLE_USER")).token();
+        token = provider.issue(1L, "tester", List.of("ROLE_USER", "system:role:delete")).token();
 
         AuthLookupService lookup = mock(AuthLookupService.class);
         RedisAuthStore redis = mock(RedisAuthStore.class);
@@ -63,13 +64,15 @@ class JwtAuthenticationFilterTest {
     }
 
     @Test
-    void bearerHeaderAuthenticates() throws Exception {
+    void bearerHeaderAuthenticatesOnlyMenuPermissions() throws Exception {
         Authentication authentication = capture("Bearer " + token);
         AuthUser user = assertInstanceOf(AuthUser.class, authentication.getPrincipal());
         assertEquals(1L, user.userId());
         assertEquals("tester", user.username());
-        assertTrue(authentication.getAuthorities().stream()
+        assertFalse(authentication.getAuthorities().stream()
                 .anyMatch(authority -> "ROLE_USER".equals(authority.getAuthority())));
+        assertFalse(authentication.getAuthorities().stream()
+                .anyMatch(authority -> "system:role:delete".equals(authority.getAuthority())));
         assertTrue(authentication.getAuthorities().stream()
                 .anyMatch(authority -> "user:info".equals(authority.getAuthority())));
     }

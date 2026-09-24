@@ -298,12 +298,12 @@ source src/main/resources/db/schema.sql;
 
 ---
 
-## 📝 登录契约（尚未实现）
+## 📝 登录验证
 
-下面是设计中的请求，现在还不能用来登录：
+初始化数据包含可用于验证登录的管理员账号。启动服务后，可按以下请求登录：
 
 ```bash
-# 设计中的登录请求。启动类是 org.example.rbac.RbacApplication。
+# 启动类是 org.example.rbac.RbacApplication。
 POST http://localhost:8080/api/auth/login
 Content-Type: application/json
 
@@ -312,10 +312,8 @@ Content-Type: application/json
   "password": "admin123"
 }
 
-# 目标响应是 JWT Token，但 Controller 还没写。
-# SecurityConfig 放行了 /api/auth/login 和 /api/auth/register，这两个地址目前是 404。
-# 其他 /api/** 没有认证信息时返回 401。
-# 契约见 docs/api-design.md。库里的 admin/admin123 只供以后做密码校验。
+# 登录成功后响应包含 JWT Token。登录和注册无需认证；退出、刷新 Token、当前用户信息及其他受保护接口需要有效 Token。
+# 完整认证接口契约见 api-design.md 和 api-reference.md。
 ```
 
 ---

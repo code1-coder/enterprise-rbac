@@ -1,0 +1,36 @@
+{
+  "name": "enterprise-rbac-frontend",
+  "version": "0.1.0",
+  "type": "module",
+  "description": "企业权限角色分配系统 - 管理端前端",
+  "scripts": {
+    "dev": "vite",
+    "build": "vue-tsc -b && vite build",
+    "preview": "vite preview",
+    "lint": "eslint . --ext .vue,.js,.jsx,.cjs,.mjs,.ts,.tsx,.cts,.mts --fix --ignore-path .gitignore",
+    "type-check": "vue-tsc --noEmit -p tsconfig.app.json --composite false",
+    "test": "vitest"
+  },
+  "dependencies": {
+    "vue": "^3.5.13",
+    "vue-router": "^4.5.0",
+    "pinia": "^2.3.0",
+    "axios": "^1.7.9",
+    "element-plus": "^2.9.1"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-vue": "^5.2.1",
+    "@vue/tsconfig": "^0.7.0",
+    "typescript": "~5.6.3",
+    "vite": "^6.0.7",
+    "vue-tsc": "^2.2.0",
+    "@typescript-eslint/eslint-plugin": "^8.18.2",
+    "@typescript-eslint/parser": "^8.18.2",
+    "eslint": "^9.18.0",
+    "eslint-plugin-vue": "^9.32.0",
+    "vitest": "^2.1.8",
+    "@vue/test-utils": "^2.4.6",
+    "unplugin-vue-components": "^0.27.4",
+    "unplugin-auto-import": "^0.18.6"
+  }
+}
