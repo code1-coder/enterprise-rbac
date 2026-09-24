@@ -1,4 +1,4 @@
-> 项目：[企业权限角色分配系统](../README.md)（`enterprise-rbac`）。认证、用户管理和角色管理接口已实现；菜单树与菜单维护接口仍在开发中（当前用户菜单/按钮权限查询除外）。权限标识以 [schema.sql](../src/main/resources/db/schema.sql) 为准，删除用 `delete`，不用 `remove`。运行时 `SecurityConfig` 放行登录、注册、首页、Knife4j 和 Druid；其他 `/api/**` 未认证返回 401。示例用户密码写 `User@123456`，不要和数据库密码 `123456`、管理员密码 `admin123` 搞混。
+> 项目：[企业权限角色分配系统](../README.md)（`enterprise-rbac`）。认证、用户、角色和菜单权限接口已实现。权限标识以 [schema.sql](../src/main/resources/db/schema.sql) 为准，删除用 `delete`，不用 `remove`。运行时 `SecurityConfig` 放行登录、注册、首页、Knife4j 和 Druid；其他 `/api/**` 未认证返回 401。示例用户密码写 `User@123456`，不要和数据库密码 `123456`、管理员密码 `admin123` 搞混。
 
 # 企业权限角色分配系统 - API接口设计文档
 
@@ -10,7 +10,7 @@
 |------|------|--------|------|
 | **GET** | 查询数据（单个/列表） | 是 | GET /api/users |
 | **POST** | 创建新资源 | 否 | POST /api/users |
-| **PUT** | 完整更新资源 | 是 | PUT /api/users/1 |
+| **PUT** | 更新已有资源，字段缺省语义以具体接口说明为准 | 是 | PUT /api/users/1 |
 | **DELETE** | 删除资源 | 是 | DELETE /api/users/1 |
 
 ### URL 命名规范
@@ -486,7 +486,7 @@ PUT /api/menus/{id}
 DELETE /api/menus/{id}
 ```
 
-删除前需校验：若存在子菜单则拒绝删除。
+请求使用 `parentId`、`menuName`、`menuType` 等菜单字段；类型为 M 目录、C 菜单、F 按钮、A 接口。创建时 `sort` 缺省为 0，`visible`、`status` 缺省为 1；更新是完整更新核心字段，`sort`、`visible`、`status`、`remark` 未传时保留原值，备注传空白会清空。父级必须为 0 或已存在且未逻辑删除的菜单，禁止把自身或后代设为父级。删除前若存在子菜单则拒绝；删除会逻辑删除菜单并清理角色菜单关联。菜单更新或删除后，关联角色用户的 Redis 权限缓存会在事务提交后失效。
 
 **权限要求**: `system:menu:delete`
 

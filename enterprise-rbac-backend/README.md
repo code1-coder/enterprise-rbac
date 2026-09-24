@@ -2,7 +2,7 @@
 
 Enterprise RBAC。Maven 工程名是 `enterprise-rbac`。
 
-这是一个 Spring Boot 3.2.5 的权限管理服务。JWT 认证、用户管理九项接口，以及角色 CRUD 和角色菜单权限分配已实现；菜单树和菜单维护接口仍在开发中。
+这是一个 Spring Boot 3.2.5 的权限管理服务。JWT 认证、用户管理九项接口、角色 CRUD 和角色菜单权限分配，以及菜单权限管理接口均已实现。
 
 ## 技术栈
 
@@ -29,7 +29,7 @@ Redis 用本机实例即可，不锁定小版本。Spring Security、MySQL 驱�
 ├── pom.xml
 ├── README.md
 ├── docs
-│   ├── api-design.md       接口设计；用户、认证和角色管理已实现，菜单维护待实现
+│   ├── api-design.md       认证、用户、角色和菜单权限接口设计
 │   ├── api-reference.md    接口速查
 │   ├── database-er.md      表字段和关系
 │   ├── database-init.md    初始化步骤
@@ -93,7 +93,7 @@ mvn spring-boot:run
 - 接口文档：http://localhost:8080/doc.html
 - Druid：http://localhost:8080/druid/
 
-`/api/auth/login` 和 `/api/auth/register` 已放行，但没有 Controller，现在是 404。其他 `/api/**` 没有认证信息时返回 401。`SecurityConfig` 里的 `UserDetailsService` 只是占位，用来避免 Spring Security 打印一个随机密码；实现登录时删掉它，改为查询 `sys_user`。
+认证接口已由 `AuthController` 提供：登录和注册公开访问，退出、刷新 Token、获取当前用户信息需要有效 JWT。其他受保护的 `/api/**` 请求未携带有效认证信息时返回 401。接口行为和请求示例见 [docs/api-design.md](docs/api-design.md) 与 [docs/api-reference.md](docs/api-reference.md)。
 
 `RbacApplicationTests` 会启动完整容器，需要 MySQL 和 Redis 已按 `application.yml` 运行。
 
@@ -137,6 +137,6 @@ mvn spring-boot:run
 
 ## 当前代码边界
 
-已实现：认证与 JWT 安全链路、用户管理九项接口（含用户角色分配）、角色 CRUD 与角色菜单权限分配、当前用户菜单和按钮权限查询。
+已实现：认证与 JWT 安全链路、用户管理九项接口（含用户角色分配）、角色 CRUD 与角色菜单权限分配、菜单管理 CRUD、当前用户菜单和按钮权限查询。
 
-待实现：菜单树和菜单维护 CRUD。对应 MenuService 当前通过骨架占位异常明确标记未完成。
+菜单管理包含管理菜单树、详情、创建、更新和删除；删除有子节点的菜单会被拒绝，成功删除时逻辑删除菜单并清理角色菜单关联。

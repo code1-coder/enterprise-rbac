@@ -5,7 +5,7 @@
 ## 范围
 
 - 后端在 `enterprise-rbac-backend`，包名 `org.example.rbac`，Java 17，Spring Boot 3.2.5。
-- 前端目录只是预留。没有明确要求时，不初始化工程，不添加依赖。
+- 前端位于 `enterprise-rbac-frontend`。当前是设计/文档阶段；没有明确实现要求时，不初始化工程、不添加依赖或编写前端代码。
 - 只改完成当前任务所需的文件。不顺手重排格式、重命名无关符号或升级依赖。
 - 不提交 `target/`、`.idea/`、`node_modules/`、`application-local.yml`、`.env`。
 
@@ -40,7 +40,7 @@
 - MyBatis-Plus 使用 Boot 3 构件 `mybatis-plus-spring-boot3-starter`。不要引入 Boot 2 starter 或代码生成器。
 - DTO 校验使用 Jakarta Validation，中文错误信息保持“字段 + 原因”。
 - 配置项走 `application.yml` 和现有 `@ConfigurationProperties`。新增可调参数要有开发默认值，但不能弱化认证。
-- 注释只解释非显而易见的业务约束，不重复代码字面含义。
+- 方法声明处和关键步骤必须添加必要的中文注释，说明方法语义、业务约束或关键设计决策；重点覆盖公开业务方法及权限校验、数据过滤、事务边界、缓存失效等关键步骤。注释只解释非显而易见的约束，不重复代码字面含义。
 
 ## 验证
 
@@ -48,3 +48,14 @@
 - 不依赖外部服务的测试不能启动完整 Spring 容器。需要 MySQL 或 Redis 的检查要明确说明，不能把环境缺失伪装成通过。
 - 修改 Java 代码后运行能定位变更的 Maven 测试；至少说明哪些测试已运行、哪些因环境未运行。
 - 接口路径、权限串、字段或状态码变化时，同步更新对应文档。
+
+## 前端开发与后端对接
+
+- 前端技术选型和架构以 `enterprise-rbac-frontend/docs/architecture.md` 为约定；后端联调以 `enterprise-rbac-frontend/docs/api-integration.md`、后端当前 Controller/DTO/VO 和 `enterprise-rbac-backend/docs/api-reference.md` 为准。文档与当前实现冲突时先核对代码，再同步修正文档。
+- 前端使用 Vue 3、TypeScript、Vite、Vue Router、Pinia、Axios 和 Element Plus。只在明确要求实现前端时初始化依赖；选择兼容版本并提交锁文件，不为文档设计任务安装依赖。
+- 页面组件负责展示和用户交互；请求集中在领域 API 模块，经统一 HTTP 客户端访问后端。不要在页面组件中散落 URL、鉴权头或响应错误解析。
+- 统一发送 `Authorization: Bearer <token>`。前端路由、菜单和按钮权限只用于用户体验；后端 `@PreAuthorize` 与服务层资源校验才是安全边界。
+- 接口权限判断只使用 `sys_menu.permission` 返回的权限标识，不把 `ROLE_ADMIN` 等角色编码当成 `hasAuthority` 权限。菜单组件路径需映射到前端本地白名单，不执行服务端返回的任意模块路径。
+- 本地开发通过 Vite 将 `/api` 代理到后端 `http://localhost:8080`；后端当前没有配置跨域许可。部署时由同源反向代理转发，除非任务明确要求，不通过降低安全性或任意放开 CORS 来绕过跨域问题。
+- 不将密码、JWT、密钥写入日志、源码或提交的环境文件；不得提交 `.env`、本地环境配置或构建产物。前端令牌生命周期、401/403 处理遵循架构与联调文档。
+- 前端实现需按变更补充聚焦测试：至少覆盖路由鉴权/权限可见性、请求头与响应错误处理，以及重要表单成功和校验失败路径。测试应 mock API，不依赖已运行的 MySQL/Redis；文档设计任务不要求启动前端工程或运行不存在的测试。
