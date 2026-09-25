@@ -4,6 +4,8 @@ Enterprise RBAC。Maven 工程名是 `enterprise-rbac`。
 
 这是一个 Spring Boot 3.2.5 的权限管理服务。JWT 认证、用户管理九项接口、角色 CRUD 和角色菜单权限分配，以及菜单权限管理接口均已实现。
 
+截至 2026-09-25，Vue 3 管理端已有登录、用户、角色和菜单页面；前端联调、路由页面级权限拦截及类型检查仍待完善。项目整体进度与验证边界见 [根目录 README](../README.md) 和 [前端进度](../enterprise-rbac-frontend/PROJECT_SUMMARY.md)。后端接口实现范围以下文及当前 Controller 为准。
+
 ## 技术栈
 
 版本以 [pom.xml](pom.xml) 为准。

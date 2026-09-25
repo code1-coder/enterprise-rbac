@@ -2,9 +2,9 @@
 
 ## 当前阶段
 
-本文件定义管理端的技术与逻辑设计，不代表前端工程已初始化。当前目录不含页面、组件、依赖清单或可运行代码；只有在明确要求实现时才按本设计建工程。
+本文件最初是设计约定；截至 2026-09-25，前端工程、依赖清单及登录、用户、角色、菜单页面均已落地。以下有些条目仍是目标设计，未实现的部分在下文明确标出；当前进度见 [前端 README](../README.md)。
 
-后端是当前可运行的系统。前端接口和权限设计以当前后端 Controller、DTO、VO、`schema.sql` 及 [API 联调文档](api-integration.md) 为准。文档冲突时先核对代码，不以旧接口样例覆盖真实实现。
+后端与前端均有可运行代码。接口和权限设计以当前后端 Controller、DTO、VO、`schema.sql` 及 [API 联调文档](api-integration.md) 为准；文档冲突时先核对代码。
 
 ## 技术选型
 
@@ -18,21 +18,21 @@
 | HTTP 客户端 | Axios | 通过单一实例注入 Authorization，集中处理 `Result`、401/403 和网络异常 |
 | UI 组件库 | Element Plus | 复用适合管理端的表格、表单、树选择、对话框和反馈组件 |
 
-项目尚无前端 `package.json`，因此本设计不锁定库版本。初始化时选择彼此兼容且受支持的稳定版本，提交包管理器锁文件；不得因设计任务先安装依赖。
+前端已有 `package.json` 与 `package-lock.json`，版本以这两个文件为准，不再按原规划重新初始化项目。
 
 官方文档： [Vue](https://vuejs.org/guide/introduction.html)、[TypeScript with Vue](https://vuejs.org/guide/typescript/overview.html)、[Vite](https://vite.dev/guide/)、[Vue Router](https://router.vuejs.org/)、[Pinia](https://pinia.vuejs.org/)、[Element Plus](https://element-plus.org/)、[Axios](https://axios-http.com/docs/intro)。
 
 ## 应用分层
 
-建议工程初始化后按职责组织，不要求机械照搬目录名：
+当前工程按职责组织（以下为层次概览，不要求机械照搬目录名）：
 
 ```text
 src/
   api/          按 auth、users、roles、menus 划分的请求函数
-  components/   可复用的表格、表单、权限按钮、布局组件
+  components/   预留可复用组件目录；目前主要复用 Element Plus
   layouts/      登录后主框架、侧边导航和内容区
-  router/       静态路由、登录守卫、菜单路由装配
-  stores/       auth、permission、navigation 等 Pinia 状态
+  router/       静态路由、登录守卫和权限初始化
+  stores/       auth、permission Pinia 状态
   types/        Result、PageResult、DTO 和 VO 对应的前端类型
   utils/        统一 HTTP 客户端及纯工具
   views/        login、user、role、menu 等业务页面
@@ -55,17 +55,17 @@ src/
 
 > 菜单管理与当前用户导航/权限接口均已实现。管理端接口分别要求 `system:menu:list/query/add/edit/delete`；当前用户的 `my-menus` 和 `my-permissions` 仅要求已登录。
 
-主框架登录后调用 `/api/menus/my-menus` 获取当前用户导航。后端只返回有权访问的启用 M（目录）和 C（菜单）节点；F（按钮）和 A（接口权限）不作为导航项。`path` 用于导航，`component` 只可映射到前端已注册的本地组件白名单；不得动态执行或任意导入服务端返回的组件路径。未映射路径应安全降级到 404/无权页面，不尝试猜测组件。
+主框架使用 `/api/menus/my-menus` 的当前用户导航。后端只返回已授权、启用的 M（目录）和 C（菜单）节点；F（按钮）和 A（接口权限）不作为导航项。当前路由表只注册 `/system/user`、`/system/role`、`/system/menu` 三个本地组件，不执行服务端返回的 `component` 路径；未知路径的显式 404/无权页尚未实现。
 
 按钮显示逻辑根据 `/api/menus/my-permissions` 返回的 `sys_menu.permission` 集合判断，例如 `system:user:add`。角色编码 `ROLE_ADMIN` 是角色资料，不是 `hasAuthority` 权限。前端隐藏按钮和路由仅用于界面体验，后端仍须独立校验每个受保护接口。
 
-路由守卫负责三类情况：未登录跳 `/login`；已登录但尚未载入导航时先完成用户/菜单/权限初始化；无对应页面权限时展示无权限页或回退到可访问页面。后端 API 仍是最终授权来源，路由守卫不能代替服务端鉴权。
+当前路由守卫负责未登录跳 `/login`、从 `sessionStorage` 恢复登录态和首次加载用户/菜单/权限。**尚未实现**按页面权限拒绝手动访问管理路由或展示无权限页；后端 API 仍是最终授权来源。按钮显隐取 `permission` Store，保存角色权限后与管理页重新获得焦点时会刷新当前账号权限；多个启用角色的权限取并集。
 
 ## 登录态与权限初始化
 
 1. 登录表单提交用户名和密码至公开的 `/api/auth/login`。
 2. 成功后保存 `data.token` 和 `data.tokenType`，使用 `data.userInfo` 初始化当前用户摘要；密码立即丢弃，不写入状态持久化、日志或浏览器存储。
-3. 使用标准请求头 `Authorization: Bearer <token>` 并加载 `/api/auth/user-info`、`/api/menus/my-menus` 与 `/api/menus/my-permissions`；成功后装配导航和本地白名单路由。
+3. 使用标准请求头 `Authorization: Bearer <token>`；登录后加载 `my-menus` 和 `my-permissions`，页面刷新后路由守卫还会请求 `/api/auth/user-info`。导航来自服务端菜单，页面组件来自静态路由表。
 4. 页面刷新时若本地仍有令牌，重新调用上述已登录接口验证；任何鉴权 401 都清除本地认证状态和权限快照，并跳转登录页。
 5. 退出时调用 `/api/auth/logout`，无论请求成功与否都清除本地 token、用户、路由与权限状态。刷新 Token 时，后端会使旧 Token 进入黑名单，前端必须立即用响应中的新 Token 替换旧值。
 
@@ -75,9 +75,9 @@ src/
 
 - 后端本地地址为 `http://localhost:8080`，依赖 MySQL 与 Redis；默认管理员账号 `admin / admin123`。MySQL 开发密码 `123456`、接口样例密码 `User@123456` 均非管理员密码。
 - 后端当前没有配置 CORS 许可。开发服务器应将 `/api` 同源代理到 `http://localhost:8080`；生产环境由同源反向代理转发，不在前端绕过浏览器安全策略。
-- API base URL 通过前端构建环境配置，代码里不硬编码生产域名、JWT 密钥、数据库密码或 Druid 凭据。
+- HTTP 客户端当前使用相对 `/api`；Vite 开发代理目标为 `http://localhost:8080`。部署时由同源反向代理转发，不在代码里放生产域名、JWT 密钥、数据库密码或 Druid 凭据。
 - 分页、查询、完整更新、逻辑删除和权限串按 [API 联调文档](api-integration.md) 处理。服务端校验失败时将后端 `message` 转成可读提示；不要假设写请求都返回资源详情。
 
 ## 验证策略
 
-前端工程初始化后，按实现范围补测试：统一客户端请求头和错误解析；未登录/无权路由守卫；权限按钮可见性；关键表单参数和校验；用户、角色、菜单页面成功与失败状态。测试应 mock API，不依赖已运行的 MySQL/Redis；真实联调需另行确认后端依赖和数据已启动。
+目前已加入用户角色显示、角色权限树回填、权限 Store 刷新的纯逻辑测试；统一客户端请求头和错误解析、路由守卫、关键表单、用户/角色/菜单页面成功与失败状态仍需补测。现有 `vitest.config.ts` 使用 `jsdom`，但依赖清单未声明该包；纯逻辑测试可用 Node 环境运行。`npm run type-check` 尚有错误；单独的 Vite 构建成功不等于完整 `npm run build` 通过。真实联调需另行确认后端、MySQL、Redis 和数据均已启动。

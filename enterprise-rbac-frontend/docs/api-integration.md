@@ -2,6 +2,8 @@
 
 本文对应目标仓库当前后端代码。更完整的请求字段与业务规则见后端 [API 设计](../../enterprise-rbac-backend/docs/api-design.md) 和 [API 速查](../../enterprise-rbac-backend/docs/api-reference.md)；最终以 Controller、DTO、VO、Service、Security 配置及 [schema.sql](../../enterprise-rbac-backend/src/main/resources/db/schema.sql) 为准。菜单树、详情、创建、更新、删除以及当前用户菜单和权限接口均已实现。
 
+**对接进度（2026-09-25）**：前端登录、用户/角色/菜单页面和对应 API 模块已实现，Vite 的 `/api` 代理已配置。角色权限树按叶节点回填半选分支，授权保存和页面重新获得焦点时刷新当前账号菜单/按钮权限。完整的真实账号跨会话联调、前端类型检查与自动化测试覆盖仍待完成；手动访问管理路由的页面级权限拦截尚未实现，接口权限由后端保障。
+
 ## 联调前提
 
 - 后端地址：`http://localhost:8080`；服务需要 MySQL 和 Redis。启动与初始化见后端 [README](../../enterprise-rbac-backend/README.md)。
@@ -92,6 +94,8 @@
 | 分配角色菜单 | `PUT /api/roles/{id}/permissions` | `system:role:assign` | 请求 `{ "menuIds": [1, 2] }`；空数组清空分配 |
 
 角色名称和编码唯一，分页 `size` 最大 100。角色权限值是菜单 ID，不是单独的 permission ID；菜单树来自 `GET /api/menus/tree`。
+
+角色权限保存时提交全选与半选父节点 ID；再次打开父子联动树时只能把已授权叶节点设为选中，不能直接把半选父节点传给 `setCheckedKeys`，否则会误选其全部子节点。后端以启用角色的权限取并集，撤销一个角色的权限不一定撤销用户的最终权限。
 
 ### 菜单权限
 
