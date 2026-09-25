@@ -66,7 +66,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, onMounted, onUnmounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ArrowDown } from '@element-plus/icons-vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
@@ -85,6 +85,15 @@ const pageTitle = computed(() => route.meta.title || '')
 
 // 菜单树
 const menuTree = computed(() => permissionStore.menus)
+
+const refreshPermissions = () => {
+  void permissionStore.loadUserPermissions().catch(() => {
+    if (authStore.isAuthenticated) ElMessage.warning('权限刷新失败，请稍后重试')
+  })
+}
+
+onMounted(() => window.addEventListener('focus', refreshPermissions))
+onUnmounted(() => window.removeEventListener('focus', refreshPermissions))
 
 /**
  * 退出登录
