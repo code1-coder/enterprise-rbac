@@ -1,7 +1,10 @@
 <template>
   <div class="menu-management">
+    <div class="section-intro">
+      <div><h1>菜单管理</h1><p>维护菜单层级、路径与权限标识。</p></div>
+    </div>
     <!-- 工具栏 -->
-    <div class="toolbar" style="display: flex; justify-content: flex-end; margin-bottom: 16px">
+    <div class="toolbar">
       <el-button 
         type="primary" 
         :icon="Plus" 
@@ -554,14 +557,13 @@ onMounted(() => {
 
 <style scoped>
 .menu-management {
-  padding: 20px;
+  padding: 0;
 }
 
 .toolbar {
-  background: #fff;
-  padding: 20px;
-  margin-bottom: 20px;
-  border-radius: 4px;
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 0;
 }
 
 :deep(.el-table__indent) {

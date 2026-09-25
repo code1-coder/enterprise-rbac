@@ -1,5 +1,8 @@
 <template>
   <div class="role-management">
+    <div class="section-intro">
+      <div><h1>角色管理</h1><p>配置角色及其可访问的菜单权限。</p></div>
+    </div>
     <!-- 工具栏 -->
     <el-form :inline="true" :model="queryForm" class="toolbar-form">
       <el-form-item label="角色名称">
@@ -540,14 +543,14 @@ onMounted(() => {
 
 <style scoped>
 .role-management {
-  padding: 20px;
+  padding: 0;
 }
 
 .toolbar-form {
-  background: #fff;
-  padding: 20px;
-  margin-bottom: 20px;
-  border-radius: 4px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+  margin-bottom: 0;
 }
 
 .tree-node-label {

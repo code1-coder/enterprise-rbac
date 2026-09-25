@@ -1,5 +1,8 @@
 <template>
   <div class="user-management">
+    <div class="section-intro">
+      <div><h1>用户管理</h1><p>管理账号信息、状态与角色分配。</p></div>
+    </div>
     <el-form :inline="true" :model="queryForm" class="toolbar-form">
       <el-form-item label="用户名">
         <el-input v-model="queryForm.username" placeholder="请输入用户名" clearable @keyup.enter="handleQuery" />
@@ -407,12 +410,12 @@ onMounted(() => {
 
 <style scoped>
 .user-management {
-  padding: 20px;
+  padding: 0;
 }
 .toolbar-form {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
-  margin-bottom: 16px;
+  gap: 8px 12px;
+  margin-bottom: 0;
 }
 </style>
