@@ -20,11 +20,9 @@ export interface UserVO {
   status: 0 | 1
   createTime: string
   updateTime: string
-  roles?: Array<{
-    id: number
-    roleCode: string
-    roleName: string
-  }>
+  roleIds?: number[]
+  roles?: string[]
+  roleNames?: string[]
 }
 
 /**

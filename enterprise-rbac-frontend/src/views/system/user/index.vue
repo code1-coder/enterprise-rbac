@@ -38,8 +38,8 @@
       </el-table-column>
       <el-table-column label="角色" width="180">
         <template #default="{ row }">
-          <template v-if="row.roles && row.roles.length > 0">
-            <el-tag v-for="role in row.roles" :key="role.id" size="small" style="margin-right: 4px">{{ role.roleName }}</el-tag>
+          <template v-if="userRoleLabels(row as UserVO).length">
+            <el-tag v-for="role in userRoleLabels(row as UserVO)" :key="role.id" size="small" style="margin-right: 4px">{{ role.name }}</el-tag>
           </template>
           <span v-else>-</span>
         </template>
@@ -137,6 +137,7 @@ import { rolesApi } from '@/api/roles'
 import { usePermissionStore } from '@/stores/permission'
 import type { UserVO, UserQueryDTO, UserCreateDTO, UserUpdateDTO } from '@/types/user'
 import type { RoleOption } from '@/types/role'
+import { userRoleIds, userRoleLabels } from './roles'
 
 const permissionStore = usePermissionStore()
 const hasPermission = (permission: string) => permissionStore.hasPermission(permission)
@@ -312,7 +313,7 @@ const handleAssignRole = async (row: UserVO) => {
   currentUser.value = row
   try {
     const user = await usersApi.getById(row.id)
-    selectedRoleIds.value = user.roles?.map(r => r.id) || []
+    selectedRoleIds.value = userRoleIds(user)
     roleDialogVisible.value = true
   } catch (error: any) {
     ElMessage.error(error.message || '加载用户角色失败')
