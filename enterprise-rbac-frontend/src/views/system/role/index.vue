@@ -184,6 +184,7 @@
       :title="`分配权限 - ${currentRole.roleName}`" 
       width="700px"
       :close-on-click-modal="false"
+      @opened="handlePermissionDialogOpened"
     >
       <el-form>
         <el-form-item label="角色名称">
@@ -249,7 +250,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted, nextTick } from 'vue'
+import { ref, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox, ElTree, type FormInstance } from 'element-plus'
 import { Plus } from '@element-plus/icons-vue'
 import { rolesApi } from '@/api/roles'
@@ -257,6 +258,7 @@ import { menusApi } from '@/api/menus'
 import { usePermissionStore } from '@/stores/permission'
 import type { RoleVO, RoleQueryDTO, RoleCreateDTO, RoleUpdateDTO } from '@/types/role'
 import type { MenuTreeVO, MenuType } from '@/types/menu'
+import { checkedKeysForDisplay } from './permissionSelection'
 
 const permissionStore = usePermissionStore()
 const hasPermission = (permission: string) => {
@@ -313,6 +315,7 @@ const rules = {
 const permissionDialogVisible = ref(false)
 const currentRole = ref<RoleVO>({} as RoleVO)
 const menuTree = ref<MenuTreeVO[]>([])
+const assignedMenuIds = ref<number[]>([])
 const treeRef = ref<InstanceType<typeof ElTree>>()
 const expandAll = ref(false)
 const checkAll = ref(false)
@@ -461,16 +464,17 @@ const handleAssignPermission = async (row: RoleVO) => {
     
     // 加载角色已分配的菜单 ID
     const result = await rolesApi.getPermissions(row.id)
-    
-    // 回显选中状态
-    nextTick(() => {
-      treeRef.value?.setCheckedKeys(result.menuIds)
-    })
-    
+    assignedMenuIds.value = result.menuIds
+    treeRef.value?.setCheckedKeys([])
     permissionDialogVisible.value = true
+    checkAll.value = false
   } catch (error: any) {
     ElMessage.error(error.message || '加载权限数据失败')
   }
+}
+
+const handlePermissionDialogOpened = () => {
+  treeRef.value?.setCheckedKeys(checkedKeysForDisplay(menuTree.value, assignedMenuIds.value, checkStrictly.value))
 }
 
 // 展开/折叠全部
@@ -529,6 +533,11 @@ const handleSavePermissions = async () => {
     await rolesApi.assignPermissions(currentRole.value.id, { menuIds })
     ElMessage.success('权限分配成功')
     permissionDialogVisible.value = false
+    try {
+      await permissionStore.loadUserPermissions()
+    } catch {
+      ElMessage.warning('权限已保存，当前账号权限刷新失败，请重新登录')
+    }
   } catch (error: any) {
     ElMessage.error(error.message || '权限分配失败')
   } finally {
