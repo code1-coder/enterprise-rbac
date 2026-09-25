@@ -1,5 +1,7 @@
 # 角色管理界面设计规范
 
+> 实现进度（2026-09-25）：`src/views/system/role/index.vue` 已有角色列表与增删改、权限分配对话框。下文较长代码段是设计示例；权限回填以当前 `permissionSelection.ts` 和组件实现为准，不能将半选父节点直接传给联动树的 `setCheckedKeys`。完整联调和关键表单测试仍待完善。
+
 ## 概述
 
 角色管理模块负责系统角色的创建、编辑、删除以及菜单权限的分配。角色是 RBAC 权限模型的核心，连接用户与菜单权限，界面设计需要清晰展示角色数据并提供高效的权限配置流程。
@@ -423,12 +425,15 @@ const handleExpandChange = (val: boolean) => {
 }
 
 // 全选/全不选
+const getAllNodeIds = (nodes: MenuTreeVO[]): number[] =>
+  nodes.flatMap(node => [node.id, ...getAllNodeIds(node.children ?? [])])
+
 const handleCheckAllChange = (val: boolean) => {
   const tree = treeRef.value
   if (!tree) return
   
   if (val) {
-    tree.setCheckedNodes(menuTree.value)
+    tree.setCheckedKeys(getAllNodeIds(menuTree.value))
   } else {
     tree.setCheckedKeys([])
   }
@@ -456,15 +461,19 @@ const handleAssignPermission = async (row: RoleVO) => {
     // 加载角色已分配的菜单 ID
     const result = await rolesApi.getPermissions(row.id)
     
-    // 回显选中状态
-    nextTick(() => {
-      treeRef.value?.setCheckedKeys(result.menuIds)
-    })
-    
+    assignedMenuIds.value = result.menuIds
+    treeRef.value?.setCheckedKeys([])
     permissionDialogVisible.value = true
   } catch (error) {
     ElMessage.error('加载权限数据失败')
   }
+}
+
+// el-dialog 的 @opened 调用；此时树节点已挂载
+const handlePermissionDialogOpened = () => {
+  treeRef.value?.setCheckedKeys(
+    checkedKeysForDisplay(menuTree.value, assignedMenuIds.value, checkStrictly.value)
+  )
 }
 
 // 保存权限分配
@@ -482,6 +491,7 @@ const handleSavePermissions = async () => {
     await rolesApi.assignPermissions(currentRole.value.id, { menuIds })
     ElMessage.success('权限分配成功')
     permissionDialogVisible.value = false
+    await permissionStore.loadUserPermissions()
   } catch (error: any) {
     ElMessage.error(error.message || '权限分配失败')
   } finally {
@@ -493,6 +503,7 @@ const handleSavePermissions = async () => {
 **重要提示**:
 - 保存时需要同时提交全选（`getCheckedKeys`）和半选（`getHalfCheckedKeys`）的节点 ID
 - 半选状态表示父节点的部分子节点被选中，父节点也应包含在权限列表中
+- 回显时父子联动只设置已授权叶节点，让树自行计算半选父节点；关闭父子联动时保留原始 ID。授权接口与前端按钮权限刷新是不同步骤。
 - 后端存储的是菜单 ID 列表，不是单独的 permission 字段
 
 ---
